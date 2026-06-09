@@ -434,32 +434,39 @@ body {
   transform: scale(1.12);
 }
 
-/* Textarea */
+/* Textarea & text input */
 .field-wrap { position: relative; margin-bottom: 28px; }
 
-.field-wrap textarea {
+.field-wrap textarea,
+.field-wrap input[type="text"] {
   width: 100%;
-  padding: 16px 44px 16px 18px;
+  padding: 16px 18px;
   border: 1.5px solid var(--border);
   border-radius: var(--r-md);
   font-family: 'Plus Jakarta Sans', sans-serif;
   font-size: 14px;
   color: var(--text);
   background: var(--surface);
-  resize: none;
-  min-height: 100px;
   transition: all 0.2s ease;
   line-height: 1.6;
 }
 
-.field-wrap textarea:focus {
+.field-wrap textarea {
+  padding-right: 44px;
+  resize: none;
+  min-height: 100px;
+}
+
+.field-wrap textarea:focus,
+.field-wrap input[type="text"]:focus {
   outline: none;
   border-color: var(--charcoal);
   background: white;
   box-shadow: 0 0 0 3px var(--charcoal-glow);
 }
 
-.field-wrap textarea::placeholder { color: var(--text-light); font-style: italic; font-size: 13px; }
+.field-wrap textarea::placeholder,
+.field-wrap input[type="text"]::placeholder { color: var(--text-light); font-style: italic; font-size: 13px; }
 .field-icon { position: absolute; bottom: 14px; right: 14px; color: var(--text-light); font-size: 15px; pointer-events: none; }
 
 /* Buttons */
@@ -565,7 +572,7 @@ body {
         <div class="cup-figure">
           <div class="cup-steam"><span></span><span></span><span></span></div>
           <div class="cup-handle"></div>
-          <div class="cup-body"><div id="cupFill" style="height:25%;"></div></div>
+          <div class="cup-body"><div id="cupFill" style="height:20%;"></div></div>
           <div class="cup-saucer"></div>
         </div>
       </div>
@@ -575,11 +582,11 @@ body {
       </div>
       <div class="progress-wrap">
         <div class="progress-track">
-          <div class="progress-fill" id="progressFill" style="width:25%;"></div>
+          <div class="progress-fill" id="progressFill" style="width:20%;"></div>
         </div>
         <div class="progress-labels">
-          <span id="progressStep">Paso 1 de 4</span>
-          <span id="progressPct">25%</span>
+          <span id="progressStep">Paso 1 de 5</span>
+          <span id="progressPct">20%</span>
         </div>
       </div>
     </div>
@@ -591,8 +598,10 @@ body {
         <span class="step-dot" id="dot2"></span>
         <span class="step-dot" id="dot3"></span>
         <span class="step-dot" id="dot4"></span>
+        <span class="step-dot" id="dot5"></span>
       </div>
 
+      <!-- PASO 1: Satisfacción general -->
       <div class="survey-step" id="step1">
         <div class="q-eyebrow"><span>Sabor</span></div>
         <div class="question-text">¿Qué tan satisfecho estás con el coffee break de hoy?</div>
@@ -609,7 +618,21 @@ body {
         </div>
       </div>
 
+      <!-- PASO 2: Aula -->
       <div class="survey-step" id="step2" style="display:none">
+        <div class="q-eyebrow"><span>Grupo</span></div>
+        <div class="question-text">¿En qué aula estás hoy?</div>
+        <div class="field-wrap">
+          <input type="text" id="aulaField" placeholder="Ej: Aula 3, MBA Sábado…" autocomplete="off" autocapitalize="words">
+        </div>
+        <div class="btn-group">
+          <button class="btn btn-secondary" onclick="prevStep()">← Anterior</button>
+          <button class="btn btn-primary" onclick="nextStep()">Siguiente →</button>
+        </div>
+      </div>
+
+      <!-- PASO 3: Calidad -->
+      <div class="survey-step" id="step3" style="display:none">
         <div class="q-eyebrow"><span>Cata</span></div>
         <div class="question-text">Del 1 al 5, ¿cómo calificas la calidad de los alimentos?</div>
         <div class="pill-grid">
@@ -625,7 +648,8 @@ body {
         </div>
       </div>
 
-      <div class="survey-step" id="step3" style="display:none">
+      <!-- PASO 4: Comentario -->
+      <div class="survey-step" id="step4" style="display:none">
         <div class="q-eyebrow"><span>Variedad</span></div>
         <div class="question-text">¿Qué te gustaría ver diferente en el coffee break?</div>
         <div class="field-wrap">
@@ -638,7 +662,8 @@ body {
         </div>
       </div>
 
-      <div class="survey-step" id="step4" style="display:none">
+      <!-- PASO 5: Recomienda -->
+      <div class="survey-step" id="step5" style="display:none">
         <div class="q-eyebrow"><span>Final</span></div>
         <div class="question-text">En general, ¿recomendarías nuestro coffee break a otros alumnos?</div>
         <div class="aroma-scale">
@@ -670,7 +695,7 @@ body {
 
 <footer class="page-footer">
   <strong>Universidad Anáhuac Querétaro</strong> · Área de Posgrados<br>
-  Encuesta de satisfacción Coffee Break · v6
+  Encuesta de satisfacción Coffee Break · v7
 </footer>
 
 <script>
@@ -687,9 +712,10 @@ function selectPill(el) {
 }
 
 function getComment() { return document.getElementById('commentField').value.trim(); }
+function getAula()    { return document.getElementById('aulaField').value.trim(); }
 
 let currentStep = 1;
-const totalSteps = 4;
+const totalSteps = 5;
 
 function updateDots(n) {
   for (let i = 1; i <= totalSteps; i++) {
@@ -725,15 +751,21 @@ function finishSurvey() {
   const sel1  = step1.querySelector('.aroma-option.selected');
   const paso1 = sel1 ? Array.from(step1.querySelectorAll('.aroma-option')).indexOf(sel1) + 1 : 0;
 
-  const step2 = document.getElementById('step2');
-  const sel2  = step2.querySelector('.pill.selected');
-  const paso2 = sel2 ? parseInt(sel2.textContent) : 0;
+  const step3 = document.getElementById('step3');
+  const sel3  = step3.querySelector('.pill.selected');
+  const paso3 = sel3 ? parseInt(sel3.textContent) : 0;
 
-  const step4 = document.getElementById('step4');
-  const sel4  = step4.querySelector('.aroma-option.selected');
-  const paso4 = sel4 ? Array.from(step4.querySelectorAll('.aroma-option')).indexOf(sel4) + 1 : 0;
+  const step5 = document.getElementById('step5');
+  const sel5  = step5.querySelector('.aroma-option.selected');
+  const paso5 = sel5 ? Array.from(step5.querySelectorAll('.aroma-option')).indexOf(sel5) + 1 : 0;
 
-  const payload = { satisfaccion: paso1, calidad: paso2, comentario: getComment(), recomienda: paso4 };
+  const payload = {
+    satisfaccion: paso1,
+    aula:         getAula(),
+    calidad:      paso3,
+    comentario:   getComment(),
+    recomienda:   paso5
+  };
 
   document.querySelectorAll('.survey-step').forEach(s => s.style.display = 'none');
   document.getElementById('stepDots').style.display = 'none';
